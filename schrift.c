@@ -74,7 +74,6 @@
 #define STACK_FREE(var) \
 	if (var != var##_stack_) free(var);
 
-enum { SrcMapping, SrcUser };
 
 /* structs */
 typedef struct Point   Point;
@@ -113,9 +112,6 @@ struct SFT_Font
 {
 	const uint8_t *memory;
 	uint_fast32_t  size;
-#if defined(_WIN32)
-	HANDLE         mapping;
-#endif
 	
 	uint_least16_t unitsPerEm;
 	int_least16_t  locaFormat;
