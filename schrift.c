@@ -1046,7 +1046,7 @@ simple_flags(SFT_Font *font, uint_fast32_t *offset, uint_fast16_t numPts, uint8_
 	uint8_t value = 0, repeat = 0;
 	for (i = 0; i < numPts; ++i) {
 		if (repeat) {
-			--repeat;
+			repeat -= 1;
 		} else {
 			if (!is_safe_offset(font, off, 1))
 				return -1;
@@ -1162,7 +1162,7 @@ decode_contour(uint8_t *flags, uint_fast16_t basePoint, uint_fast16_t count, Out
 				if (outl->numPoints >= outl->capPoints && grow_points(outl) < 0)
 					return -1;
 				outl->points[center] = midpoint(outl->points[ctrl], outl->points[cur]);
-				++outl->numPoints;
+				outl->numPoints += 1;
 
 				if (outl->numCurves >= outl->capCurves && grow_curves(outl) < 0)
 					return -1;
@@ -1384,19 +1384,19 @@ tesselate_curve(Curve curve, Outline *outl)
 			if (outl->numPoints >= outl->capPoints && grow_points(outl) < 0)
 				return -1;
 			outl->points[ctrl0] = midpoint(outl->points[curve.beg], outl->points[curve.ctrl]);
-			++outl->numPoints;
+			outl->numPoints += 1;
 
 			uint_least16_t ctrl1 = outl->numPoints;
 			if (outl->numPoints >= outl->capPoints && grow_points(outl) < 0)
 				return -1;
 			outl->points[ctrl1] = midpoint(outl->points[curve.ctrl], outl->points[curve.end]);
-			++outl->numPoints;
+			outl->numPoints += 1;
 
 			uint_least16_t pivot = outl->numPoints;
 			if (outl->numPoints >= outl->capPoints && grow_points(outl) < 0)
 				return -1;
 			outl->points[pivot] = midpoint(outl->points[ctrl0], outl->points[ctrl1]);
-			++outl->numPoints;
+			outl->numPoints += 1;
 
 			stack[top++] = (Curve) { curve.beg, pivot, ctrl0 };
 			curve = (Curve) { pivot, curve.end, ctrl1 };
