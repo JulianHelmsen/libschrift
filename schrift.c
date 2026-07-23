@@ -1327,8 +1327,8 @@ draw_line(Raster buf, Point origin, Point goal)
 
 	delta.x = goal.x - origin.x;
 	delta.y = goal.y - origin.y;
-	dir.x = SIGN(delta.x);
-	dir.y = SIGN(delta.y);
+	dir.x = delta.x >= 0 ? 1.0 : -1.0;
+	dir.y = delta.y >= 0 ? 1.0 : -1.0;
 
 	if (!dir.y) {
 		return;
