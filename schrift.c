@@ -359,13 +359,19 @@ sft_render(const SFT *sft, SFT_Glyph glyph, SFT_Image image)
 	}
 	
 	memset(&outl, 0, sizeof outl);
-	if (init_outline(&outl) < 0)
-		goto failure;
+	if (init_outline(&outl) < 0) {
+        free_outline(&outl);
+        return -1;
+    }
 
-	if (decode_outline(sft->font, outline, 0, &outl) < 0)
-		goto failure;
-	if (render_outline(&outl, transform, image) < 0)
-		goto failure;
+	if (decode_outline(sft->font, outline, 0, &outl) < 0) {
+        free_outline(&outl);
+        return -1;
+    }
+	if (render_outline(&outl, transform, image) < 0) {
+        free_outline(&outl);
+        return -1;
+    }
 
 	free_outline(&outl);
 	return 0;
@@ -1085,26 +1091,27 @@ simple_outline(SFT_Font *font, uint_fast32_t offset, unsigned int numContours, O
 
 	uint_fast16_t basePoint = outl->numPoints;
 
-	if (!is_safe_offset(font, offset, numContours * 2 + 2))
-		goto failure;
+	if (!is_safe_offset(font, offset, numContours * 2 + 2)) {
+        return -1;
+    }
 	numPts = getu16(font, offset + (numContours - 1) * 2);
 	if (numPts >= UINT16_MAX)
-		goto failure;
+        return -1;
 	numPts++;
 	if (outl->numPoints > UINT16_MAX - numPts)
-		goto failure;
+        return -1;
 
 	while (outl->capPoints < basePoint + numPts) {
 		if (grow_points(outl) < 0)
-			goto failure;
+            return -1;
 	}
 	
 	STACK_ALLOC(endPts, uint_fast16_t, 16, numContours);
 	if (endPts == NULL)
-		goto failure;
+		{STACK_FREE(endPts);}
 	STACK_ALLOC(flags, uint8_t, 128, numPts);
 	if (flags == NULL)
-		goto failure;
+		{STACK_FREE(endPts); STACK_FREE(flags); }
 
 	for (i = 0; i < numContours; ++i) {
 		endPts[i] = getu16(font, offset);
@@ -1115,21 +1122,21 @@ simple_outline(SFT_Font *font, uint_fast32_t offset, unsigned int numContours, O
 	 * Therefore, we bail, should we ever encounter such input. */
 	for (i = 0; i < numContours - 1; ++i) {
 		if (endPts[i + 1] < endPts[i] + 1)
-			goto failure;
+			{STACK_FREE(endPts); STACK_FREE(flags); }
 	}
 	offset += 2U + getu16(font, offset);
 
 	if (simple_flags(font, &offset, numPts, flags) < 0)
-		goto failure;
+		{STACK_FREE(endPts); STACK_FREE(flags); }
 	if (simple_points(font, offset, numPts, flags, outl->points + basePoint) < 0)
-		goto failure;
+		{STACK_FREE(endPts); STACK_FREE(flags); }
 	outl->numPoints = (uint_least16_t) (outl->numPoints + numPts);
 
 	uint_fast16_t beg = 0;
 	for (i = 0; i < numContours; ++i) {
 		uint_fast16_t count = endPts[i] - beg + 1;
 		if (decode_contour(flags + beg, basePoint + beg, count, outl) < 0)
-			goto failure;
+			{STACK_FREE(endPts); STACK_FREE(flags); }
 		beg = endPts[i] + 1;
 	}
 
