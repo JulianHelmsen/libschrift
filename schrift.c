@@ -66,7 +66,6 @@
 
 /* macros */
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define SIGN(x)   (((x) > 0) - ((x) < 0))
 /* Allocate values on the stack if they are small enough, else spill to heap. */
 #define STACK_ALLOC(var, type, thresh, count) \
 	type var##_stack_[thresh]; \
@@ -1327,8 +1326,8 @@ draw_line(Raster buf, Point origin, Point goal)
 
 	delta.x = goal.x - origin.x;
 	delta.y = goal.y - origin.y;
-	dir.x = delta.x >= 0 ? 1.0 : -1.0;
-	dir.y = delta.y >= 0 ? 1.0 : -1.0;
+	dir.x = delta.x == 0 ? 0 : (delta.x >= 0 ? 1.0 : -1.0);
+	dir.y = delta.y == 0 ? 0 : (delta.y >= 0 ? 1.0 : -1.0);
 
 	if (!dir.y) {
 		return;
